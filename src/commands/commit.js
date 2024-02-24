@@ -3,17 +3,17 @@ import { Workspace, Database, Blob, Tree, Entry } from '../modules/index.js'
 
 export const command = 'commit'
 export const desc = 'Create a commit'
+export const builder = yargs => {
+  return yargs.option('m', {
+    describe: 'commit message',
+    demandOption: true,
+    type: 'string',
+  })
+}
 
-/*
- * when "commit"
- * root_path = Pathname.new(Dir.getwd) git_path = root_path.join(".git")
- * db_path = git_path.join("objects")
- * workspace = Workspace.new(root_path) puts workspace.list_files
- */
-/* 
- *undefined
- */
-export const handler = function () {
+export const handler = args => {
+  console.log('args', args)
+
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
   const dbPath = path.join(gitPath, 'objects')
@@ -36,6 +36,23 @@ export const handler = function () {
     const tree = new Tree(entries)
 
     db.store(tree)
+
+    const name = process.env.GIT_AUTHOR_NAME || args.user.name
+    const email = process.env.GIT_AUTHOR_EMAIL || args.user.email
+
+    console.log({ name, email })
+
+    /*
+     * author = Author.new(name, email, Time.now)
+     * message = $stdin
+     */
+
+    /*
+     * const author = new Author(name, email, Date.now())
+     * const commit = new Commit(tree.oid, author, message)
+     */
+
+    // db.store(commit)
 
     console.log('tree', tree.oid)
     process.exit(0)
