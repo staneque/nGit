@@ -1,4 +1,4 @@
-import fs from 'node:fs/promises'
+import fs from 'node:fs'
 import path from 'node:path'
 
 export class Refs {
@@ -7,21 +7,19 @@ export class Refs {
     this.headPath = path.join(this.pathname, 'HEAD')
   }
 
-  async updateHead(oid) {
-    const fd = await fs.open(this.headPath, 'w')
-    await fs.write(fd, oid)
-    await fs.close(fd)
+  updateHead(oid) {
+    const fd = fs.openSync(this.headPath, 'w')
+    fs.writeFileSync(fd, oid)
+    fs.closeSync(fd)
   }
 
-  async readHead() {
+  readHead() {
     try {
-      await fs.access(this.headPath)
-
-      const headContents = await fs.readFile(this.headPath, 'binary')
+      const headContents = fs.readFileSync(this.headPath, 'binary')
 
       return headContents.trim()
     } catch (err) {
-      return false
+      return null
     }
   }
 }

@@ -22,8 +22,7 @@ export const builder = yargs => {
   })
 }
 
-// TODO: async where possible
-export const handler = async args => {
+export const handler = args => {
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
   const dbPath = path.join(gitPath, 'objects')
@@ -35,36 +34,36 @@ export const handler = async args => {
   try {
     const files = workspace.listFiles()
 
-    const entries = files.map(file => {
+    const blobs = files.map(file => {
       const fileData = workspace.readFile(file)
       const blob = new Blob(fileData)
 
-      db.store(blob)
-
-      return new Entry(file, blob.oid)
+      return { file, blob }
     })
 
-    const parent = await refs.readHead()
+    /*
+     * Store each file
+     * DB store assignes oid
+     */
+    blobs.forEach(({ blob }) => db.store(blob))
 
-    // https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables
+    /* Store tree  */
+    const entries = blobs.map(({ file, blob }) => new Entry(file, blob.oid))
+    const tree = new Tree(entries)
+    const treeOid = db.store(tree)
+
+    /* Store commit info */
     const name = process.env.GIT_AUTHOR_NAME || args.user.name
     const email = process.env.GIT_AUTHOR_EMAIL || args.user.email
     const author = new Author(name, email, getTimestampWithOffset())
-
-    const tree = new Tree(entries)
-    db.store(tree)
-
-    const commit = new Commit(parent, tree.oid, author, args.m)
-
+    const parent = refs.readHead()
+    const commit = new Commit(parent, treeOid, author, args.m)
     const commitOid = db.store(commit)
+
     refs.updateHead(commitOid)
 
-    const headFilePath = path.join(gitPath, 'HEAD')
-
-    fs.writeFileSync(headFilePath, commitOid, { flag: 'w' })
-
     console.log(
-      `[${parent ? '' : 'root'} ${commitOid} ] ${args.m.split('\n')[0]}`
+      `[ ${parent ? '' : 'root'} ${commitOid} ] ${args.m.split('\n')[0]}`
     )
 
     process.exit(0)

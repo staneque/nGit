@@ -20,7 +20,7 @@ export class Commit {
 
   toString() {
     const lines = [
-      `tree ${this.tree}${this.parent ? '\n' + this.parent : ''}`,
+      `tree ${this.tree}${this.parent ? '\nparent ' + this.parent : ''}`,
       `author ${this.author}`,
       `committer ${this.author}`,
       '',

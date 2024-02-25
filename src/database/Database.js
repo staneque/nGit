@@ -75,9 +75,7 @@ export class Database {
     })
 
     fs.writeSync(file, compressed)
-
     fs.closeSync(file)
-
     fs.renameSync(tempPath, objectPath)
   }
 }
