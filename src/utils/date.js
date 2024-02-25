@@ -1,6 +1,6 @@
 import dayjs from 'dayjs'
-import utc from 'dayjs/plugin/utc.js' // Import UTC plugin for timezone manipulation
-import timezone from 'dayjs/plugin/timezone.js' // Import timezone plugin for timezone conversion
+import utc from 'dayjs/plugin/utc.js'
+import timezone from 'dayjs/plugin/timezone.js'
 
 dayjs.extend(utc)
 dayjs.extend(timezone)

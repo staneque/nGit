@@ -23,8 +23,6 @@ export const builder = yargs => {
 
 // TODO: async where possible
 export const handler = args => {
-  // console.log('args', args)
-
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
   const dbPath = path.join(gitPath, 'objects')
