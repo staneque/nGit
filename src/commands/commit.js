@@ -1,5 +1,15 @@
 import path from 'node:path'
-import { Workspace, Database, Blob, Tree, Entry } from '../modules/index.js'
+import {
+  Workspace,
+  Database,
+  Blob,
+  Tree,
+  Entry,
+  Author,
+  Commit,
+} from '../modules/index.js'
+import fs from 'node:fs'
+import { getTimestampWithOffset } from '../utils/date.js'
 
 export const command = 'commit'
 export const desc = 'Create a commit'
@@ -11,8 +21,9 @@ export const builder = yargs => {
   })
 }
 
+// TODO: async where possible
 export const handler = args => {
-  console.log('args', args)
+  // console.log('args', args)
 
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
@@ -33,28 +44,25 @@ export const handler = args => {
       return new Entry(file, blob.oid)
     })
 
-    const tree = new Tree(entries)
-
-    db.store(tree)
-
     const name = process.env.GIT_AUTHOR_NAME || args.user.name
     const email = process.env.GIT_AUTHOR_EMAIL || args.user.email
+    const author = new Author(name, email, getTimestampWithOffset())
 
-    console.log({ name, email })
+    const tree = new Tree(entries)
+    db.store(tree) // TODO: DB writes tree.oid here,
+    // consider return oid from the store method explicitly, to pass it further for more clarity
 
-    /*
-     * author = Author.new(name, email, Time.now)
-     * message = $stdin
-     */
+    const commit = new Commit(tree.oid, author, args.m)
 
-    /*
-     * const author = new Author(name, email, Date.now())
-     * const commit = new Commit(tree.oid, author, message)
-     */
+    db.store(commit)
 
-    // db.store(commit)
+    const headFilePath = path.join(gitPath, 'HEAD')
 
+    fs.writeFileSync(headFilePath, commit.oid, { flag: 'w' })
+
+    console.log(`[(root-commit) ${commit.oid}] ${args.m.split('\n')[0]}`)
     console.log('tree', tree.oid)
+
     process.exit(0)
   } catch (error) {
     console.error(error)

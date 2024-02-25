@@ -1,14 +1,14 @@
 export class Entry {
   constructor(name, oid) {
-    this.name = name
-    this.oid = oid
+    this._name = name
+    this._oid = oid
   }
 
-  name() {
-    return this.name
+  get name() {
+    return this._name
   }
 
-  oid() {
-    return this.oid
+  get oid() {
+    return this._oid
   }
 }

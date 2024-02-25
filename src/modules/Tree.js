@@ -8,6 +8,14 @@ export class Tree {
     return 'tree'
   }
 
+  get oid() {
+    return this._oid
+  }
+
+  set oid(oid) {
+    this._oid = oid
+  }
+
   toString() {
     const entries = this.entries
       .sort((a, b) => a.name.localeCompare(b.name))
