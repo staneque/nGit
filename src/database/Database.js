@@ -32,6 +32,8 @@ export class Database {
     object.oid = createHash('sha1').update(combinedBuffer).digest('hex')
 
     this.writeObject(object.oid, combinedBuffer)
+
+    return object.oid
   }
 
   // Compress and write to disk.

@@ -7,7 +7,8 @@ import {
   Entry,
   Author,
   Commit,
-} from '../modules/index.js'
+  Refs,
+} from '../database/index.js'
 import fs from 'node:fs'
 import { getTimestampWithOffset } from '../utils/date.js'
 
@@ -22,13 +23,14 @@ export const builder = yargs => {
 }
 
 // TODO: async where possible
-export const handler = args => {
+export const handler = async args => {
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
   const dbPath = path.join(gitPath, 'objects')
 
   const workspace = new Workspace(currentPath)
   const db = new Database(dbPath)
+  const refs = new Refs(gitPath)
 
   try {
     const files = workspace.listFiles()
@@ -42,24 +44,28 @@ export const handler = args => {
       return new Entry(file, blob.oid)
     })
 
+    const parent = await refs.readHead()
+
+    // https://git-scm.com/book/en/v2/Git-Internals-Environment-Variables
     const name = process.env.GIT_AUTHOR_NAME || args.user.name
     const email = process.env.GIT_AUTHOR_EMAIL || args.user.email
     const author = new Author(name, email, getTimestampWithOffset())
 
     const tree = new Tree(entries)
-    db.store(tree) // TODO: DB writes tree.oid here,
-    // consider return oid from the store method explicitly, to pass it further for more clarity
+    db.store(tree)
 
-    const commit = new Commit(tree.oid, author, args.m)
+    const commit = new Commit(parent, tree.oid, author, args.m)
 
-    db.store(commit)
+    const commitOid = db.store(commit)
+    refs.updateHead(commitOid)
 
     const headFilePath = path.join(gitPath, 'HEAD')
 
-    fs.writeFileSync(headFilePath, commit.oid, { flag: 'w' })
+    fs.writeFileSync(headFilePath, commitOid, { flag: 'w' })
 
-    console.log(`[(root-commit) ${commit.oid}] ${args.m.split('\n')[0]}`)
-    console.log('tree', tree.oid)
+    console.log(
+      `[${parent ? '' : 'root'} ${commitOid} ] ${args.m.split('\n')[0]}`
+    )
 
     process.exit(0)
   } catch (error) {

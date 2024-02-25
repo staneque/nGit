@@ -1,5 +1,6 @@
 export class Commit {
-  constructor(tree, author, message) {
+  constructor(parent, tree, author, message) {
+    this.parent = parent
     this.tree = tree // tree oid
     this.author = author
     this.message = message
@@ -19,7 +20,7 @@ export class Commit {
 
   toString() {
     const lines = [
-      `tree ${this.tree}`,
+      `tree ${this.tree}${this.parent ? '\n' + this.parent : ''}`,
       `author ${this.author}`,
       `committer ${this.author}`,
       '',
