@@ -7,10 +7,11 @@
     "ngit": "./index.js"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "lint": "npx eslint src/**",
+    "lint:fix": "npx eslint src/** --fix"
   },
   "type": "module",
-  "keywords": [],
+  "keywords": [ ],
   "author": "Stanislav Ovcharov",
   "license": "ISC",
   "dependencies": {

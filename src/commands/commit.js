@@ -9,7 +9,6 @@ import {
   Commit,
   Refs,
 } from '../database/index.js'
-import fs from 'node:fs'
 import { getTimestampWithOffset } from '../utils/date.js'
 
 export const command = 'commit'
