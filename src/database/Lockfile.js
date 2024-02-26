@@ -30,7 +30,6 @@ export class LockFile {
       try {
         this.lock = fs.openSync(this.lockPath, 'wx+')
       } catch (error) {
-        console.error('ERROR', error)
         if (error.code === 'EEXIST') {
           return false
 
