@@ -3,6 +3,7 @@ import path from 'node:path'
 import fs from 'node:fs'
 import zlib from 'node:zlib'
 import { Buffer } from 'node:buffer'
+import { fileExistsSync } from '../utils/fs.js'
 import { generateRandomName } from '../utils/common.js'
 
 export class Database {
@@ -49,6 +50,11 @@ export class Database {
       oid.substring(0, 2),
       oid.substring(2)
     )
+
+    if (fileExistsSync(objectPath)) {
+      console.log('Skipped writing to existing file: ', objectPath)
+      return
+    }
 
     /*
      * If some other process attempts to read the file,
