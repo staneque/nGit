@@ -35,9 +35,9 @@ export const handler = async args => {
 
     const filesDataPromises = files.map(fileName => {
       return Promise.all([
-        Promise.resolve(fileName), // [0] File name
-        workspace.readFile(fileName), // [1] File data
-        workspace.getFileStats(fileName), // [2] File stat
+        Promise.resolve(fileName), //**********[0] File name
+        workspace.readFile(fileName), //*******[1] File data
+        workspace.getFileStats(fileName), //***[2] File stat
       ])
     })
 
