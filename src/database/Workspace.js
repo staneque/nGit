@@ -1,4 +1,4 @@
-import fs from 'node:fs'
+import fs from 'node:fs/promises'
 import path from 'node:path'
 
 export class Workspace {
@@ -9,13 +9,16 @@ export class Workspace {
     this.pathname = pathname
   }
 
-  listFiles() {
-    return fs
-      .readdirSync(this.pathname)
-      .filter(file => !Workspace.IGNORE.includes(file))
+  async listFiles() {
+    const files = await fs.readdir(this.pathname)
+    return files.filter(file => !Workspace.IGNORE.includes(file))
   }
 
-  readFile(file) {
-    return fs.readFileSync(path.join(this.pathname, file))
+  async readFile(file) {
+    return fs.readFile(path.join(this.pathname, file))
+  }
+
+  async getFileStats(file) {
+    return fs.stat(path.join(this.pathname, file))
   }
 }

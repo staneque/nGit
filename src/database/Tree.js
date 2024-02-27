@@ -1,6 +1,5 @@
 export class Tree {
   constructor(entries) {
-    this.MODE = '100644'
     this.entries = entries
   }
 
@@ -24,8 +23,7 @@ export class Tree {
          * Generate a stqring for each entry consisting of:
          * mode 100644 + space + filename + nullbyte + 20 bytes for the objectID
          */
-        const nameString = `${this.MODE} ${entry.name}\0`
-
+        const nameString = `${entry.mode} ${entry.name}\0`
         const bufName = Buffer.from(nameString, 'binary')
         const bufOid = Buffer.from(entry.oid, 'hex')
 

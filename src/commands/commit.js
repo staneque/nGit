@@ -31,13 +31,24 @@ export const handler = async args => {
   const refs = new Refs(gitPath)
 
   try {
-    const files = workspace.listFiles()
+    const files = await workspace.listFiles()
 
-    const blobs = files.map(file => {
-      const fileData = workspace.readFile(file)
+    const filesDataPromises = files.map(fileName => {
+      return Promise.all([
+        Promise.resolve(fileName), // [0] File name
+        workspace.readFile(fileName), // [1] File data
+        workspace.getFileStats(fileName), // [2] File stat
+      ])
+    })
+
+    const filesData = await Promise.all(filesDataPromises)
+
+    const blobs = filesData.map(f => {
+      const [fileName, fileData, fileStat] = f
+
       const blob = new Blob(fileData)
 
-      return { file, blob }
+      return { blob, fileName, fileStat }
     })
 
     /*
@@ -47,7 +58,9 @@ export const handler = async args => {
     await Promise.all[blobs.map(({ blob }) => db.store(blob))]
 
     /* Store tree  */
-    const entries = blobs.map(({ file, blob }) => new Entry(file, blob.oid))
+    const entries = blobs.map(
+      ({ fileName, blob, fileStat }) => new Entry(fileName, blob.oid, fileStat)
+    )
     const tree = new Tree(entries)
     const treeOid = await db.store(tree)
 
