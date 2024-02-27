@@ -21,7 +21,7 @@ export const builder = yargs => {
   })
 }
 
-export const handler = args => {
+export const handler = async args => {
   const currentPath = process.cwd()
   const gitPath = path.resolve(currentPath, '.git')
   const dbPath = path.join(gitPath, 'objects')
@@ -42,14 +42,14 @@ export const handler = args => {
 
     /*
      * Store each file
-     * DB store assignes oid
+     * Mind that db.store produces side effect by assigning oid to the passed object.
      */
-    blobs.forEach(({ blob }) => db.store(blob))
+    await Promise.all[blobs.map(({ blob }) => db.store(blob))]
 
     /* Store tree  */
     const entries = blobs.map(({ file, blob }) => new Entry(file, blob.oid))
     const tree = new Tree(entries)
-    const treeOid = db.store(tree)
+    const treeOid = await db.store(tree)
 
     /* Store commit info */
     const name = process.env.GIT_AUTHOR_NAME || args.user.name
@@ -57,7 +57,7 @@ export const handler = args => {
     const author = new Author(name, email, getTimestampWithOffset())
     const parent = refs.readHead()
     const commit = new Commit(parent, treeOid, author, args.m)
-    const commitOid = db.store(commit)
+    const commitOid = await db.store(commit)
 
     refs.updateHead(commitOid)
 

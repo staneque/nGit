@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto'
 import path from 'node:path'
-import fs from 'node:fs'
+import fs from 'node:fs/promises'
 import zlib from 'node:zlib'
 import { Buffer } from 'node:buffer'
 import { fileExistsSync } from '../utils/fs.js'
@@ -11,7 +11,7 @@ export class Database {
     this.pathname = pathname
   }
 
-  store(object) {
+  async store(object) {
     const buffer = Buffer.from(object.toString(), 'binary')
 
     /*
@@ -32,13 +32,13 @@ export class Database {
     // Hash using SHA-1 to compute the object’s ID,
     object.oid = createHash('sha1').update(combinedBuffer).digest('hex')
 
-    this.writeObject(object.oid, combinedBuffer)
+    await this.writeObject(object.oid, combinedBuffer)
 
     return object.oid
   }
 
   // Compress and write to disk.
-  writeObject(oid, content) {
+  async writeObject(oid, content) {
     /*
      * build the final destination path that the blob will be written to
      * the path to the .git/objects directory +
@@ -52,7 +52,7 @@ export class Database {
     )
 
     if (fileExistsSync(objectPath)) {
-      console.log('Skipped writing to existing file: ', objectPath)
+      console.log('Skipped writing - file already exists: ', objectPath)
       return
     }
 
@@ -66,22 +66,22 @@ export class Database {
     const tempPath = path.join(dirname, generateRandomName(6, 'tmp_obj_'))
 
     try {
-      fs.mkdirSync(dirname, { recursive: true })
+      await fs.mkdir(dirname, { recursive: true })
     } catch (err) {
       if (err.code !== 'EEXIST') {
         throw err
       }
     }
 
-    // Open the file for reading and writing. If the file already exists, the call will fail.
-    const file = fs.openSync(tempPath, 'wx+')
-
     const compressed = zlib.deflateSync(content, {
       level: zlib.constants.Z_BEST_SPEED,
     })
 
-    fs.writeSync(file, compressed)
-    fs.closeSync(file)
-    fs.renameSync(tempPath, objectPath)
+    // Open the file for reading and writing. If the file already exists, the call will fail.
+    const file = await fs.open(tempPath, 'wx+')
+
+    await file.writeFile(compressed)
+    await file.close()
+    await fs.rename(tempPath, objectPath)
   }
 }
