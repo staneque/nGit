@@ -53,7 +53,7 @@ export const handler = async args => {
 
     /*
      * Store each file
-     * Mind that db.store produces side effect by assigning oid to the passed object.
+     * Mind that db.store mutates blob by assigning oid
      */
     await Promise.all[blobs.map(({ blob }) => db.store(blob))]
 
