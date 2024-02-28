@@ -5,13 +5,29 @@ export class Workspace {
   static IGNORE = ['.', '..', '.git']
 
   constructor(pathname) {
-    // Cwd
+    // CWD
     this.pathname = pathname
   }
 
-  async listFiles() {
-    const files = await fs.readdir(this.pathname)
-    return files.filter(file => !Workspace.IGNORE.includes(file))
+  async listFiles(pathname = this.pathname) {
+    const filenames = await fs.readdir(pathname)
+
+    const fPromises = filenames
+      .filter(file => !Workspace.IGNORE.includes(file))
+      .map(async filename => {
+        const fullPath = path.join(pathname, filename)
+        const stats = await fs.stat(fullPath)
+
+        if (stats.isDirectory()) {
+          return this.listFiles(fullPath)
+        } else {
+          return path.relative(this.pathname, fullPath)
+        }
+      })
+
+    const filesList = await Promise.all(fPromises)
+
+    return filesList.flat()
   }
 
   async readFile(file) {
